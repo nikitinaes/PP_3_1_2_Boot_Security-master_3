@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,6 +12,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -40,13 +42,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/", "/index").permitAll()
                 .antMatchers("/user/**").authenticated() //доступ на страницу требует аутентификации
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/read_profile/**").hasRole("ADMIN")
+
                 .and()
-             //   .formLogin().successHandler(successUserHandler)//предоставляем стандартную форму для логина
-             //   .permitAll()
+//                .formLogin().successHandler(successUserHandler)//предоставляем стандартную форму для логина//
+//                .permitAll()//
                 .formLogin()
                 .and()
-                .logout().logoutSuccessUrl("/")//был просто logout()
+                .logout().logoutSuccessUrl("/")
                 .permitAll();
     }
 
@@ -97,7 +99,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    }
     @Bean
     public PasswordEncoder passwordEncoder() {
-       return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

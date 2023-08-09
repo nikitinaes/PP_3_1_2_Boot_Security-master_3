@@ -24,5 +24,6 @@ public class SuccessUserHandler implements AuthenticationSuccessHandler {
         else {
             httpServletResponse.sendRedirect("/");//отправляет на страницу index? Скорее Предлагает залогиниться?
         }
+
     }
 }
