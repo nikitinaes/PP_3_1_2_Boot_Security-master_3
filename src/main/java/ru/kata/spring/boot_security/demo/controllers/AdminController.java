@@ -9,34 +9,26 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
-import ru.kata.spring.boot_security.demo.services.RoleService;
-import ru.kata.spring.boot_security.demo.services.UserService;
+import ru.kata.spring.boot_security.demo.services.RoleServiceImpl;
+import ru.kata.spring.boot_security.demo.services.UserServiceImpl;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Controller
 public class AdminController {
-    private UserService userService;
-    private RoleService roleService;
+
+    private UserServiceImpl userService;
+    private RoleServiceImpl roleService;
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public void setUserService(UserService userService) {
+    public AdminController(UserServiceImpl userService, RoleServiceImpl roleService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
-    }
-
-    @Autowired
-    public void setRoleService(RoleService roleService) {
         this.roleService = roleService;
-    }
-
-    @Autowired
-    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -76,12 +68,14 @@ public class AdminController {
         userService.removeUser(id);
         return "redirect:/admin";
     }
+
     @GetMapping("admin/edit/{id}")
     public String pageEditUser(@PathVariable("id") long id, Model model) {
         model.addAttribute("user",userService.getUserById(id));
         model.addAttribute("listRoles", roleService.getAllRoles());
         return "edit";
     }
+
     @PutMapping("admin/edit")
     public String pageEdit(@Valid User user, BindingResult bindingResult,
                            @RequestParam("listRoles") List<Integer>roleIds) {
@@ -90,9 +84,9 @@ public class AdminController {
         }
         Set<Role> roles = new HashSet<>(roleService.getRolesById(roleIds));
         user.setRoles(roles);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userService.updateUser(user);
         return "redirect:/admin";
     }
-
 }
 
