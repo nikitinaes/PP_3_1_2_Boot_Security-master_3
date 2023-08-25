@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
+import ru.kata.spring.boot_security.demo.services.PersonDetailsService;
 import ru.kata.spring.boot_security.demo.services.RoleServiceImpl;
 import ru.kata.spring.boot_security.demo.services.UserServiceImpl;
 import javax.validation.Valid;
@@ -30,24 +31,28 @@ public class AdminController {
     private final RoleServiceImpl roleService;
     private final PasswordEncoder passwordEncoder;
 
+    private final PersonDetailsService personDetailsService;
+
     @Autowired
-    public AdminController(UserServiceImpl userService, RoleServiceImpl roleService, PasswordEncoder passwordEncoder) {
+    public AdminController(UserServiceImpl userService, RoleServiceImpl roleService, PasswordEncoder passwordEncoder,
+                           PersonDetailsService personDetailsService) {
         this.userService = userService;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
+        this.personDetailsService = personDetailsService;
     }
 
     @GetMapping("/admin")
     public String showAllUsers (Principal principal, Model model) {
         model.addAttribute("users", userService.findAllUsers());
-        model.addAttribute("user", userService.findByUsername(principal.getName()));
+        model.addAttribute("user", personDetailsService.findByUsername(principal.getName()));
         model.addAttribute("roles", roleService.findByIdRoles());
         return "users";
     }
 
 @GetMapping("/add")
 public String pageCreateUser (Model model, Principal principal) {
-    model.addAttribute("user", userService.findByUsername(principal.getName()));
+    model.addAttribute("user", personDetailsService.findByUsername(principal.getName()));
     model.addAttribute("listRoles", roleService.findByIdRoles());
     return "create";
 }
@@ -59,7 +64,7 @@ public String pageCreateUser (Model model, Principal principal) {
         if (bindingResult.hasErrors()) {
             return "create";
         }
-        if (userService.findByUsername(user.getUsername()) != null) {
+        if (personDetailsService.findByUsername(user.getUsername()) != null) {
             bindingResult.addError(new FieldError("username", "username",
                     String.format("User with name \"%s\" already exists!", user.getUsername())));
             return "create";
