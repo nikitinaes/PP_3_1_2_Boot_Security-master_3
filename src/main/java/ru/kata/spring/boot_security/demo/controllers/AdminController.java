@@ -6,12 +6,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
 import ru.kata.spring.boot_security.demo.services.RoleServiceImpl;
 import ru.kata.spring.boot_security.demo.services.UserServiceImpl;
-
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.HashSet;
@@ -21,9 +26,9 @@ import java.util.Set;
 @Controller
 public class AdminController {
 
-    private UserServiceImpl userService;
-    private RoleServiceImpl roleService;
-    private PasswordEncoder passwordEncoder;
+    private final UserServiceImpl userService;
+    private final RoleServiceImpl roleService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AdminController(UserServiceImpl userService, RoleServiceImpl roleService, PasswordEncoder passwordEncoder) {
@@ -33,18 +38,21 @@ public class AdminController {
     }
 
     @GetMapping("/admin")
-    public String showAllUsers(Model model, Principal principal) {
+    public String showAllUsers (Principal principal, Model model) {
         model.addAttribute("users", userService.findAllUsers());
+        model.addAttribute("user", userService.findByUsername(principal.getName()));
+        model.addAttribute("roles", roleService.findByIdRoles());
         return "users";
     }
 
-    @GetMapping("admin/new")
-    public String pageCreateUser(@ModelAttribute("user") User user, Model model) {
-        model.addAttribute("listRoles", roleService.findByIdRoles());
-        return "create";
-    }
+@GetMapping("/add")
+public String pageCreateUser (Model model, Principal principal) {
+    model.addAttribute("user", userService.findByUsername(principal.getName()));
+    model.addAttribute("listRoles", roleService.findByIdRoles());
+    return "create";
+}
 
-    @PostMapping("admin/new")
+    @PostMapping("/new")
     public String pageCreate(@ModelAttribute("user")
                              @Valid User user, BindingResult bindingResult,
                              @RequestParam("listRoles") List<Integer> roleIds) {
@@ -63,24 +71,24 @@ public class AdminController {
         return "redirect:/admin";
     }
 
-    @DeleteMapping("admin/delete/{id}")
+    @DeleteMapping("/{id}/delete")
     public String pageDelete(@PathVariable("id") long id) {
         userService.removeUser(id);
         return "redirect:/admin";
     }
 
-    @GetMapping("admin/edit/{id}")
+    @GetMapping("/{id}/update")
     public String pageEditUser(@PathVariable("id") long id, Model model) {
         model.addAttribute("user",userService.getUserById(id));
         model.addAttribute("listRoles", roleService.getAllRoles());
-        return "edit";
+        return "users";
     }
 
-    @PutMapping("admin/edit")
+    @PutMapping("/{id}/update")
     public String pageEdit(@Valid User user, BindingResult bindingResult,
                            @RequestParam("listRoles") List<Integer>roleIds) {
         if (bindingResult.hasErrors()) {
-            return "edit";
+            return "redirect:/admin";
         }
         Set<Role> roles = new HashSet<>(roleService.getRolesById(roleIds));
         user.setRoles(roles);
